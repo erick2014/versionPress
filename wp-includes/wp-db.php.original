@@ -1,5 +1,4 @@
-<?php // Enhanced by VersionPress
-require_once(WP_CONTENT_DIR . '/plugins/versionpress/bootstrap.php');
+<?php
 /**
  * WordPress DB Class
  *
@@ -1777,7 +1776,7 @@ class wpdb {
 	 *                             If omitted, all values in $data will be treated as strings unless otherwise specified in wpdb::$field_types.
 	 * @return int|false The number of rows inserted, or false on error.
 	 */
-	public function __wp_insert( $table, $data, $format = null ) {
+	public function insert( $table, $data, $format = null ) {
 		return $this->_insert_replace_helper( $table, $data, $format, 'INSERT' );
 	}
 
@@ -1880,7 +1879,7 @@ class wpdb {
 	 *                                   If omitted, all values in $where will be treated as strings.
 	 * @return int|false The number of rows updated, or false on error.
 	 */
-	public function __wp_update( $table, $data, $where, $format = null, $where_format = null ) {
+	public function update( $table, $data, $where, $format = null, $where_format = null ) {
 		if ( ! is_array( $data ) || ! is_array( $where ) ) {
 			return false;
 		}
@@ -1934,7 +1933,7 @@ class wpdb {
 	 *                                   If omitted, all values in $where will be treated as strings unless otherwise specified in wpdb::$field_types.
 	 * @return int|false The number of rows updated, or false on error.
 	 */
-	public function __wp_delete( $table, $where, $where_format = null ) {
+	public function delete( $table, $where, $where_format = null ) {
 		if ( ! is_array( $where ) ) {
 			return false;
 		}
@@ -3129,72 +3128,4 @@ class wpdb {
 		}
 		return preg_replace( '/[^0-9.].*/', '', $server_info );
 	}
-
-
-    public function insert( $table, $data, $format = null ) {
-        global $versionPressContainer;
-        
-
-        $wpdbMirrorBridge = $versionPressContainer->resolve(\VersionPress\DI\VersionPressServices::WPDB_MIRROR_BRIDGE);
-
-        $r = $this->__wp_insert($table, $data, $format);
-
-        $this->vp_backup_fields();
-        $wpdbMirrorBridge->insert($table, $data);
-        $this->vp_restore_fields();
-
-        return $r;
-    }
-
-    public function update( $table, $data, $where, $format = null, $where_format = null ) {
-        global $versionPressContainer;
-        
-
-        $wpdbMirrorBridge = $versionPressContainer->resolve(\VersionPress\DI\VersionPressServices::WPDB_MIRROR_BRIDGE);
-
-        $r = $this->__wp_update($table, $data, $where, $format, $where_format);
-
-        $this->vp_backup_fields();
-        $wpdbMirrorBridge->update($table, $data, $where);
-        $this->vp_restore_fields();
-
-        return $r;
-    }
-
-    public function delete( $table, $where, $where_format = null ) {
-        global $versionPressContainer;
-        
-
-        $wpdbMirrorBridge = $versionPressContainer->resolve(\VersionPress\DI\VersionPressServices::WPDB_MIRROR_BRIDGE);
-
-        $r = $this->__wp_delete($table, $where, $where_format);
-
-        $this->vp_backup_fields();
-        $wpdbMirrorBridge->delete($table, $where);
-        $this->vp_restore_fields();
-
-        return $r;
-    }
-
-    private $vp_field_backup = array();
-
-    private function vp_backup_fields() {
-        $this->vp_field_backup = array(
-            "last_error" => $this->last_error,
-            "last_query" => $this->last_query,
-            "last_result" => $this->last_result,
-            "rows_affected" => $this->rows_affected,
-            "num_rows" => $this->num_rows,
-            "insert_id" => $this->insert_id,
-        );
-    }
-
-    private function vp_restore_fields() {
-        $this->last_error = $this->vp_field_backup["last_error"];
-        $this->last_query = $this->vp_field_backup["last_query"];
-        $this->last_result = $this->vp_field_backup["last_result"];
-        $this->rows_affected = $this->vp_field_backup["rows_affected"];
-        $this->num_rows = $this->vp_field_backup["num_rows"];
-        $this->insert_id = $this->vp_field_backup["insert_id"];
-    }
 }
